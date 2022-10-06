@@ -15,7 +15,9 @@ function App() {
     db.collection("messages")
       .orderBy("timestamp", "desc")
       .onSnapshot((snapshot) => {
-        setMessages(snapshot.docs.map((doc) => doc.data()));
+        setMessages(
+          snapshot.docs.map((doc) => ({id: doc.id, message: doc.data()}))
+        );
       });
   }, []);
 
@@ -63,8 +65,8 @@ function App() {
         </Button>
       </form>
 
-      {messages.map((message) => (
-        <Message message={message} username={username} />
+      {messages.map(({id, message}) => (
+        <Message key={id} message={message} username={username} />
       ))}
     </div>
   );
