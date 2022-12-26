@@ -1,0 +1,5 @@
+user register(username, email, password, image->optional) -> login -> enter room name -> chat
+
+-> room admin approve user participation
+-> show already enter chat room
+-> room admit remove any participant

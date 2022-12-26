@@ -1,75 +1,53 @@
-import React, {useEffect, useState} from "react";
-import {Button, FormControl, InputLabel, Input} from "@material-ui/core";
-import firebase from "firebase/compat/app";
+import React, {useContext} from "react";
+import {BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 
-import "./App.css";
-import Message from "./Message";
-import {db} from "./firebase";
+import {AuthContext} from "./context/AuthContext";
+import {GroupManage, Home, Login, Message, NotFound, Register} from "./pages";
 
-function App() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [username, setUsername] = useState("");
+const App = () => {
+  const {currentUser} = useContext(AuthContext);
 
-  useEffect(() => {
-    db.collection("messages")
-      .orderBy("timestamp", "desc")
-      .onSnapshot((snapshot) => {
-        setMessages(
-          snapshot.docs.map((doc) => ({id: doc.id, message: doc.data()}))
-        );
-      });
-  }, []);
+  const RequireAuth = ({children}) => {
+    return currentUser ? children : <Navigate to="login" />;
+  };
 
-  useEffect(() => {
-    setUsername(prompt("Enter your name"));
-  }, []);
-
-  const sendMessage = (event) => {
-    event.preventDefault();
-
-    db.collection("messages").add({
-      message: input,
-      username: username,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-
-    setMessages([...messages, {username: username, message: input}]);
-    setInput("");
+  const GuestAuth = ({children}) => {
+    return currentUser ? <Navigate to="/" /> : children;
   };
 
   return (
-    <div className="App">
-      <p>messenger clone</p>
-      <h2>Welcome {username}</h2>
-      {!username && "for accessing this app, you need to enter your username"}
-
-      <form>
-        <FormControl>
-          <InputLabel htmlFor="my-input">Your Message</InputLabel>
-          <Input
-            disabled={!username}
-            id="my-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Home />
+              </RequireAuth>
+            }
           />
-        </FormControl>
-        <Button
-          disabled={!input}
-          variant="contained"
-          color="primary"
-          type="submit"
-          onClick={sendMessage}
-        >
-          send message
-        </Button>
-      </form>
-
-      {messages.map(({id, message}) => (
-        <Message key={id} message={message} username={username} />
-      ))}
-    </div>
+          <Route
+            path="/register"
+            element={
+              <GuestAuth>
+                <Register />
+              </GuestAuth>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <GuestAuth>
+                <Login />
+              </GuestAuth>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
-}
+};
 
 export default App;
